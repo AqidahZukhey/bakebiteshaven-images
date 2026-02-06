@@ -129,17 +129,19 @@ elif page == "View Cart & Submit Order":
                         "Quantity": item.get("quantity", 1),
                         "Price (RM)": item["price"]
                     })
-                
-                # Save to Excel
-                file_path = "orders.xlsx"
-                if os.path.exists(file_path):
-                    df_existing = pd.read_excel(file_path)
-                    df_new = pd.DataFrame(order_data)
-                    df_to_save = pd.concat([df_existing, df_new], ignore_index=True)
-                else:
-                    df_to_save = pd.DataFrame(order_data)
-                
-                df_to_save.to_excel(file_path, index=False)
-                
+                df_orders = pd.DataFrame(order_data)
+                # Create Excel file in memory
+                buffer = BytesIO()
+                df_orders.to_excel(buffer, index=False, engine="openpyxl")
+                buffer.seek(0)
+
                 st.success(f"Thank you, {name}! Your order has been submitted.")
-                st.session_state.cart = []  # clear cart
+
+                st.download_button(
+                    label="⬇️ Download Order (Excel)",
+                    data=buffer,
+                    file_name="bakebites_orders.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+                st.session_state.cart = []
+
