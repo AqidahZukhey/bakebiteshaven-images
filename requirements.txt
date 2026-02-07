@@ -1,7 +1,7 @@
+streamlit
 gspread
 google-auth
-pandas
-streamlit
-pillow
+google-auth-oauthlib
+google-api-python-client
+Pillow
 requests
-
