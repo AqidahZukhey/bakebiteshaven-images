@@ -1,5 +1,7 @@
-streamlit
+gspread
+google-auth
 pandas
-openpyxl
-Pillow
+streamlit
+pillow
 requests
+
