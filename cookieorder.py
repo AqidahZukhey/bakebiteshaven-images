@@ -125,26 +125,27 @@ elif page == "View Cart & Submit Order":
         phone = st.text_input("WhatsApp Number")
         address = st.text_area("Delivery Address")
         remarks = st.text_input("Special Request")
-        
-if st.button("Submit Order"):
-    if not name or not phone or not address:
-        st.error("Please fill in all required fields.")
-    else:
-        order_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        for item in st.session_state.cart:
-            sheet.append_row([
-                order_time,
-                name,
-                phone,
-                address,
-                item["name"],
-                item["unit"],
-                item.get("quantity", 1),
-                item["price"]
-            ])
+        # --- SUBMIT ORDER BUTTON ---
+        if st.button("Submit Order"):
+            if not name or not phone or not address:
+                st.error("Please fill in all required fields.")
+            else:
+                order_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                
+                for item in st.session_state.cart:
+                    sheet.append_row([
+                        order_time,
+                        name,
+                        phone,
+                        address,
+                        item["name"],
+                        item["unit"],
+                        item.get("quantity", 1),
+                        item["price"]
+                    ])
+                    st.success("🎉 Order submitted successfully!")
+                    st.session_state.cart = []
 
-        st.success("🎉 Order submitted successfully!")
-        st.session_state.cart = []
 
 
