@@ -1,11 +1,26 @@
 import streamlit as st
-import pandas as pd
 from datetime import datetime
-import os
 from PIL import Image
 import requests
 from io import BytesIO
 import random
+import gspread
+from google.oauth2.service_account import Credentials
+
+# --- GOOGLE SHEET SET UP ---
+
+scope = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
+
+creds = Credentials.from_service_account_info(
+    st.secrets["gcp_service_account"],
+    scopes=scope
+)
+
+client = gspread.authorize(creds)
+sheet = client.open("BakeBites Orders").sheet1
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="Bake Bites Haven", page_icon="🍪", layout="wide")
@@ -111,37 +126,25 @@ elif page == "View Cart & Submit Order":
         address = st.text_area("Delivery Address")
         remarks = st.text_input("Special Request")
         
-        if st.button("Submit Order"):
-            if not name or not phone or not address:
-                st.error("Please fill in all fields to submit your order.")
-            else:
-                # Prepare order data
-                order_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                order_data = []
-                for item in st.session_state.cart:
-                    order_data.append({
-                        "Timestamp": order_time,
-                        "Name": name,
-                        "Phone": phone,
-                        "Address": address,
-                        "Product": item["name"],
-                        "Unit": item["unit"],
-                        "Quantity": item.get("quantity", 1),
-                        "Price (RM)": item["price"]
-                    })
-                df_orders = pd.DataFrame(order_data)
-                # Create Excel file in memory
-                buffer = BytesIO()
-                df_orders.to_excel(buffer, index=False, engine="openpyxl")
-                buffer.seek(0)
+if st.button("Submit Order"):
+    if not name or not phone or not address:
+        st.error("Please fill in all required fields.")
+    else:
+        order_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-                st.success(f"Thank you, {name}! Your order has been submitted.")
+        for item in st.session_state.cart:
+            sheet.append_row([
+                order_time,
+                name,
+                phone,
+                address,
+                item["name"],
+                item["unit"],
+                item.get("quantity", 1),
+                item["price"]
+            ])
 
-                st.download_button(
-                    label="⬇️ Download Order (Excel)",
-                    data=buffer,
-                    file_name="bakebites_orders.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-                st.session_state.cart = []
+        st.success("🎉 Order submitted successfully!")
+        st.session_state.cart = []
+
 
